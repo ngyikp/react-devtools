@@ -69,27 +69,39 @@ var config: Props = {
   },
   inject(done) {
     inject(chrome.runtime.getURL('build/backend.js'), () => {
-      var port = chrome.runtime.connect({
-        name: '' + chrome.devtools.inspectedWindow.tabId,
-      });
-      var disconnected = false;
+      // TODO We should use `chrome.devtools.inspectedWindow.tabId` first and
+      // then fallback to eval() so this call wouldn't be necessary for most pages
+      chrome.devtools.inspectedWindow.eval('window.__REACT_DEVTOOLS_GLOBAL_HOOK__.pageId', (pageId, err) => {
+        var portName;
+        if (typeof chrome.devtools.inspectedWindow.tabId !== 'undefined') {
+          portName = 'devtools_page_' + chrome.devtools.inspectedWindow.tabId;
+        } else {
+          // Chrome extension popup pages don't have tabId
+          portName = 'devtools_extension_' + pageId;
+        }
 
-      var wall = {
-        listen(fn) {
-          port.onMessage.addListener(message => fn(message));
-        },
-        send(data) {
-          if (disconnected) {
-            return;
-          }
-          port.postMessage(data);
-        },
-      };
+        var port = chrome.runtime.connect({
+          name: portName,
+        });
+        var disconnected = false;
 
-      port.onDisconnect.addListener(() => {
-        disconnected = true;
+        var wall = {
+          listen(fn) {
+            port.onMessage.addListener(message => fn(message));
+          },
+          send(data) {
+            if (disconnected) {
+              return;
+            }
+            port.postMessage(data);
+          },
+        };
+
+        port.onDisconnect.addListener(() => {
+          disconnected = true;
+        });
+        done(wall, () => port.disconnect());
       });
-      done(wall, () => port.disconnect());
     });
   },
 };

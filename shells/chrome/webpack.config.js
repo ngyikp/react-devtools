@@ -18,6 +18,7 @@ module.exports = {
     background: './src/background.js',
     inject: './src/GlobalHook.js',
     contentScript: './src/contentScript.js',
+    reactDevtoolsHelperForChromeExtensions: './src-for-chrome-extension/hook.js',
     panel: './src/panel.js',
   },
   output: {

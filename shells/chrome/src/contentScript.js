@@ -14,7 +14,7 @@
 
 // proxy from main page to devtools (via the background page)
 var port = chrome.runtime.connect({
-  name: 'content-script',
+  name: 'content-script_page',
 });
 
 port.onMessage.addListener(handleMessageFromDevtools);
