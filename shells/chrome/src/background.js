@@ -35,6 +35,9 @@ function onConnect(port) {
     name = 'devtools';
 
     tab = +parts[2];
+
+    // For extensions, we inject the content script by ourselves to avoid
+    // "Cannot access a chrome-extension:// URL of different extension"
     if (parts[1] !== 'extension') {
       installContentScript(+parts[2]);
     }

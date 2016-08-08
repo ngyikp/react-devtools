@@ -68,39 +68,42 @@ var config: Props = {
     });
   },
   inject(done) {
+    var connect = (portName) => {
+      var port = chrome.runtime.connect({
+        name: portName,
+      });
+      var disconnected = false;
+
+      var wall = {
+        listen(fn) {
+          port.onMessage.addListener(message => fn(message));
+        },
+        send(data) {
+          if (disconnected) {
+            return;
+          }
+          port.postMessage(data);
+        },
+      };
+
+      port.onDisconnect.addListener(() => {
+        disconnected = true;
+      });
+      done(wall, () => port.disconnect());
+    };
+
     inject(chrome.runtime.getURL('build/backend.js'), () => {
-      // TODO We should use `chrome.devtools.inspectedWindow.tabId` first and
-      // then fallback to eval() so this call wouldn't be necessary for most pages
-      chrome.devtools.inspectedWindow.eval('window.__REACT_DEVTOOLS_GLOBAL_HOOK__.pageId', (pageId, err) => {
-        var portName;
-        if (typeof chrome.devtools.inspectedWindow.tabId !== 'undefined') {
-          portName = 'devtools_page_' + chrome.devtools.inspectedWindow.tabId;
-        } else {
-          // Chrome extension popup pages don't have tabId
-          portName = 'devtools_extension_' + pageId;
+      // TODO: Webpages can spoof this, no? Security risk?
+      chrome.devtools.inspectedWindow.eval('chrome && chrome.runtime && chrome.runtime.id', (isChromeExtensionContext, err) => {
+        if (!isChromeExtensionContext) {
+          // Normal webpages
+          connect('devtools_page_' + chrome.devtools.inspectedWindow.tabId);
+          return;
         }
 
-        var port = chrome.runtime.connect({
-          name: portName,
+        chrome.devtools.inspectedWindow.eval('window.__REACT_DEVTOOLS_GLOBAL_HOOK__.pageId', (pageId, err) => {
+          connect('devtools_extension_' + pageId);
         });
-        var disconnected = false;
-
-        var wall = {
-          listen(fn) {
-            port.onMessage.addListener(message => fn(message));
-          },
-          send(data) {
-            if (disconnected) {
-              return;
-            }
-            port.postMessage(data);
-          },
-        };
-
-        port.onDisconnect.addListener(() => {
-          disconnected = true;
-        });
-        done(wall, () => port.disconnect());
       });
     });
   },
