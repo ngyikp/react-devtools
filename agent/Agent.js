@@ -206,10 +206,18 @@ class Agent extends EventEmitter {
       console.warn('unable to get the node for scrolling');
       return;
     }
-    if (node.scrollIntoViewIfNeeded) {
-      node.scrollIntoViewIfNeeded();
-    } else {
-      node.scrollIntoView();
+    var element = node.nodeType === Node.ELEMENT_NODE ?
+      node :
+      node.parentElement;
+    if (!element) {
+      console.warn('unable to get the element for scrolling');
+      return;
+    }
+
+    if (typeof element.scrollIntoViewIfNeeded === 'function') {
+      element.scrollIntoViewIfNeeded();
+    } else if (typeof element.scrollIntoView === 'function') {
+      element.scrollIntoView();
     }
     this.highlight(id);
   }
@@ -325,7 +333,7 @@ class Agent extends EventEmitter {
   }
 
   getId(element: OpaqueNodeHandle): ElementID {
-    if (typeof element !== 'object') {
+    if (typeof element !== 'object' || !element) {
       return element;
     }
     if (!this.ids.has(element)) {

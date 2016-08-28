@@ -9,6 +9,9 @@
  */
 'use strict';
 
+var webpack = require('webpack');
+var __DEV__ = process.env.NODE_ENV !== 'production';
+
 module.exports = {
   debug: true,
   devtool: 'source-map',
@@ -21,6 +24,17 @@ module.exports = {
     library: '[name]',
     libraryTarget: 'commonjs2',
   },
+  plugins: __DEV__ ? [] : [
+    // Ensure we get production React
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': '"production"',
+    }),
+    // Remove dead code but keep it readable:
+    new webpack.optimize.UglifyJsPlugin({
+      mangle: false,
+      beautify: true,
+    }),
+  ],
   externals: ['ws'],
   module: {
     loaders: [{
