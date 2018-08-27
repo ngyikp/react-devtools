@@ -20,6 +20,7 @@ var installRelayHook = require('../../plugins/Relay/installRelayHook');
 var Panel = require('../../frontend/Panel');
 
 var fakeWall = require('./fake-wall');
+var onPageReady = require('./on-page-ready');
 var popupWindow = require('./popup-window');
 
 // First hook to React...
@@ -61,4 +62,7 @@ openDevToolsLink.addEventListener('click', function() {
     ReactDOM.render(<Panel {...config} />, node);
   });
 }, false);
-nullthrows(document.body).appendChild(openDevToolsLink);
+
+onPageReady(function() {
+  nullthrows(document.body).appendChild(openDevToolsLink);
+});
