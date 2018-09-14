@@ -13,7 +13,6 @@
 module.exports = function(callback: () => mixed) {
   var loop = function() {
     if (
-      document.readyState === 'loaded' ||
       document.readyState === 'interactive' ||
       document.readyState === 'complete'
     ) {
